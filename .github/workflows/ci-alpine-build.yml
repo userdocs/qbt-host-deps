@@ -22,6 +22,7 @@ on:
         type: string
 jobs:
   build-alpine:
+    name: "${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}-${{ matrix.suffix }}"
     runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
@@ -37,12 +38,11 @@ jobs:
           - set_skip_icu: "no"
             suffix: "icu"
 
-    name: "${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}-${{ matrix.suffix }}"
-
     env:
       qbt_build_dir: "qbt-build"
       script_name: ${{ inputs.script_name }}
       container_name: "multiarch"
+      name: "${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}-${{ matrix.suffix }}"
 
     steps:
       - name: Checkout
@@ -153,17 +153,17 @@ jobs:
       - name: archive ${{ env.qbt_build_dir }}
         run: |
           rm -rf ${{ env.qbt_build_dir }}/{completed,x86_64-linux-musl,x86_64-linux-musl.tar.gz,graphs,patches,release_info,logs}
-          tar cJf ${{ matrix.name }}.tar.xz ${{ env.qbt_build_dir }}
+          tar cJf "${{ env.name }}.tar.xz" "${{ env.qbt_build_dir }}"
 
       - name: Generate artifact attestation  ${{ inputs.distinct_id }}
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: ${{ matrix.name }}.tar.xz
+          subject-path: "${{ env.name }}.tar.xz"
 
       - name: Host- Create release - tag - assets
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "${{ matrix.name }}.tar.xz"
+          artifacts: "${{ env.name }}.tar.xz"
           replacesArtifacts: true
           tag: "${{ env.release_tag }}"
           name: "${{ env.release_tag }}"
