@@ -12,10 +12,6 @@ on:
         description: "Alpine: workflow-files files"
         required: true
         type: string
-      icu:
-        description: "enable icu"
-        required: true
-        type: string
       debug:
         description: "debug builds"
         required: true
@@ -167,7 +163,7 @@ jobs:
       - name: Host- Create release - tag - assets
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "qt6.tar.xz"
+          artifacts: "${{ matrix.name }}.tar.xz"
           replacesArtifacts: true
           tag: "${{ env.release_tag }}"
           name: "${{ env.release_tag }}"

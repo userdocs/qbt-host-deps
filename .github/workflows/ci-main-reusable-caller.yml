@@ -20,11 +20,6 @@ on:
         required: true
         default: true
         type: boolean
-      icu:
-        description: "Enable icu"
-        required: true
-        default: false
-        type: boolean
       debug:
         description: "Debug builds (symbols)"
         required: true
@@ -67,7 +62,6 @@ jobs:
     with:
       distinct_id: ${{ github.event.inputs.distinct_id }}
       workflow-files: ${{ github.event.inputs.workflow-files == 'true' && 'yes' || 'no' }}
-      icu: ${{ github.event.inputs.icu == 'true' && 'no' || 'yes' }}
       debug: ${{ github.event.inputs.debug == 'true' && 'yes' || 'no' }}
       script_name: ${{ github.event.inputs.script_name }}
 
