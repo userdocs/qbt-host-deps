@@ -61,7 +61,7 @@ jobs:
       cancel-in-progress: true
     permissions:
       id-token: write
-      contents: read
+      contents: write
       attestations: write
     uses: ./.github/workflows/ci-alpine-build.yml
     with:

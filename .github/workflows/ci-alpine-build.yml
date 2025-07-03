@@ -169,22 +169,21 @@ jobs:
         if: env.disable_qt5 != 'yes'
         run: docker exec -u gh:gh ${container_name} bash ${script_name} qttools
 
-      - name: qt6 version info
+      - name: qt6 release tag
         run: |
           qt6_release_tag=$(jq -r '.qt6' ${{ env.qbt_build_dir }}/release_info/qt6-dependency-version.json)
-          printf '%s\n' "release_tag=${qt6_release_tag}" >> $GITHUB_ENV
+          printf '%s\n' "release_tag=v${qt6_release_tag}"
+          printf '%s\n' "release_tag=v${qt6_release_tag}" >> $GITHUB_ENV
 
-      # - name: Host - Upload qbt-qt6 and release info artifact
-      #   if: success() && env.disable_qt5 != 'yes'
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}
-      #     path: ${{ env.qbt_build_dir }}/*
-
-      - name: yolo
+      - name: archive ${{ env.qbt_build_dir }}
         run: |
           rm -rf ${{ env.qbt_build_dir }}/{completed,x86_64-linux-musl,x86_64-linux-musl.tar.gz,graphs,patches,release_info,logs}
           tar cJf qt6.tar.xz ${{ env.qbt_build_dir }}
+
+      - name: Generate artifact attestation  ${{ inputs.distinct_id }}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: qt6.tar.xz
 
       - name: Host- Create release - tag - assets
         uses: ncipollo/release-action@v1
