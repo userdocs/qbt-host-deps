@@ -33,9 +33,9 @@ jobs:
         qbt_qt_version_name: ["qt6"]
         include:
           - set_skip_icu: "yes"
-            suffix: "-iconv"
+            suffix: "iconv"
           - set_skip_icu: "no"
-            suffix: "-icu"
+            suffix: "icu"
 
     name: "${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}-${{ matrix.suffix }}"
 
