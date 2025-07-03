@@ -1,0 +1,43 @@
+name: ci - alpine-release
+
+on:
+  workflow_call:
+    inputs:
+      distinct_id:
+        description: "Distinct ID for the artifacts"
+        required: true
+        type: string
+      release_tag:
+        type: string
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04-arm
+
+    name: "Publish release qbt-hosts-deps"
+
+    env:
+      qbt_build_dir: "qbt-build"
+
+    steps:
+      - name: Checkout ${{ inputs.distinct_id }}
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Host - Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: "release"
+          merge-multiple: true
+
+      - name: Host- Create release - tag - assets
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "release/*.tar.xz"
+          replacesArtifacts: true
+          tag: "${{ inputs.release_tag }}"
+          name: "${{ inputs.release_tag }}"
+          allowUpdates: true
+          token: "${{ github.token }}"
