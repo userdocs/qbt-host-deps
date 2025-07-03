@@ -33,9 +33,8 @@ jobs:
         os_id: [alpine]
         os_version_id: [edge]
         qbt_cross_name: ["x86_64"]
-        qbt_build_tool: ["", "qmake"]
-        qbt_qt_version_name: [""]
-        qbt_qt_version: ["6"]
+        qbt_build_tool: [""]
+        qbt_qt_version_name: ["qt6"]
 
     name: "${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}"
 
@@ -118,7 +117,7 @@ jobs:
 
       - name: Host - patches
         if: env.disable_qt5 != 'yes'
-        run: mkdir -p ${qbt_build_dir}/patches && cp -r patches/* ${qbt_build_dir}/patches/
+        run: mkdir -p ${qbt_build_dir}/patches && cp -rf patches/* ${qbt_build_dir}/patches/
 
       - name: Docker - apk update
         if: env.disable_qt5 != 'yes'
@@ -194,19 +193,19 @@ jobs:
       #   if: env.disable_qt5 != 'yes'
       #   run: docker exec -u gh:gh -w /home/gh/${{ env.qbt_build_dir }}/release_info ${container_name} bash -c 'mv *.md *.json '/home/gh/${{ env.qbt_build_dir }}/completed''
 
-      - name: Host - Upload qbittorrent-nox and release info artifact
+      - name: Host - Upload qbt-qt6 and release info artifact
         if: success() && env.disable_qt5 != 'yes'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}qbittorrent-nox
+          name: ${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}
           path: ${{ env.qbt_build_dir }}/*
 
-      - name: Host - Upload cmake graphs artifact
-        if: success() && matrix.qbt_build_tool == '' && env.disable_qt5 != 'yes'
-        uses: actions/upload-artifact@v4
-        with:
-          name: "${{ matrix.qbt_cross_name }}-graphs"
-          path: "${{ env.qbt_build_dir }}/completed/*.png"
+      # - name: Host - Upload cmake graphs artifact
+      #   if: success() && matrix.qbt_build_tool == '' && env.disable_qt5 != 'yes'
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: "${{ matrix.qbt_cross_name }}-graphs"
+      #     path: "${{ env.qbt_build_dir }}/completed/*.png"
 
       - name: Host - Upload logs on error
         if: failure() && env.disable_qt5 != 'yes'
