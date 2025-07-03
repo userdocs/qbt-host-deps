@@ -151,7 +151,16 @@ jobs:
 
       - name: archive ${{ env.qbt_build_dir }}
         run: |
-          rm -rf ${qbt_build_dir}/{completed,x86_64-linux-musl,x86_64-linux-musl.tar.gz,graphs,patches,release_info,logs}
+          readarray -t contents < <(tar -tf "${qbt_build_dir}/x86_64-linux-musl.tar.gz")
+
+          # Loop and delete only files from x86_64-linux-musl.tar.gz
+          for path in "${contents[@]/x86_64-linux-musl\/}"; do
+              # Check if it's a file and delete
+              [[ -f "${qbt_build_dir}/$path" ]] && rm -rf "${qbt_build_dir}/$path"
+          done
+
+          rm -rf ${qbt_build_dir}/{bin/ninja,completed,graphs,patches,release_info,logs,x86_64-linux-musl.tar.gz}
+
           tar cJf "${name}.tar.xz" "${qbt_build_dir}"
 
       - name: Generate artifact attestation  ${{ inputs.distinct_id }}
