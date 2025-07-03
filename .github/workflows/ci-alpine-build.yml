@@ -117,7 +117,9 @@ jobs:
 
       - name: Host - patches
         if: env.disable_qt5 != 'yes'
-        run: mkdir -p ${qbt_build_dir}/patches && cp -rf patches/* ${qbt_build_dir}/patches/
+        run: |
+          mkdir -p ${qbt_build_dir}/patches
+          [[ -d patches ]] && cp -rf patches/* ${qbt_build_dir}/patches/
 
       - name: Docker - apk update
         if: env.disable_qt5 != 'yes'
