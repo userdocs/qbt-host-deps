@@ -168,6 +168,7 @@ jobs:
           rm -rf ${qbt_build_dir}/patches
           rm -rf ${qbt_build_dir}/release_info
           rm -rf ${qbt_build_dir}/logs
+          rm -rf ${qbt_build_dir}/.active-toolchain-info
 
       - name: archive ${{ env.qbt_build_dir }}
         run: tar cJf "${name}.tar.xz" "${qbt_build_dir}"
