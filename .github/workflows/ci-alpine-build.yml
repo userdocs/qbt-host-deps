@@ -151,8 +151,8 @@ jobs:
 
       - name: archive ${{ env.qbt_build_dir }}
         run: |
-          rm -rf ${{ env.qbt_build_dir }}/{completed,x86_64-linux-musl,x86_64-linux-musl.tar.gz,graphs,patches,release_info,logs}
-          tar cJf "${{ env.name }}.tar.xz" "${{ env.qbt_build_dir }}"
+          rm -rf ${qbt_build_dir}/{completed,x86_64-linux-musl,x86_64-linux-musl.tar.gz,graphs,patches,release_info,logs}
+          tar cJf "${name}.tar.xz" "${qbt_build_dir}"
 
       - name: Generate artifact attestation  ${{ inputs.distinct_id }}
         uses: actions/attest-build-provenance@v2
