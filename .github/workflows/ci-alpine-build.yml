@@ -157,14 +157,6 @@ jobs:
         if: env.disable_qt5 != 'yes'
         run: docker exec -u gh:gh ${container_name} bash ${script_name} openssl
 
-      # - name: Docker - boost
-      #   if: env.disable_qt5 != 'yes'
-      #   run: docker exec -u gh:gh ${container_name} bash ${script_name} boost
-
-      # - name: Docker - libtorrent
-      #   if: env.disable_qt5 != 'yes'
-      #   run: docker exec -u gh:gh ${container_name} bash ${script_name} libtorrent
-
       - name: Docker - double_conversion
         if: matrix.qbt_build_tool == '' && env.disable_qt5 != 'yes'
         run: docker exec -u gh:gh ${container_name} bash ${script_name} double_conversion
@@ -177,27 +169,9 @@ jobs:
         if: env.disable_qt5 != 'yes'
         run: docker exec -u gh:gh ${container_name} bash ${script_name} qttools
 
-      # - name: Docker - qbittorrent
-      #   if: env.disable_qt5 != 'yes'
-      #   run: docker exec -u gh:gh ${container_name} bash ${script_name} qbittorrent
-
-      # - name: Docker - Set release asset name
-      #   if: env.disable_qt5 != 'yes'
-      #   run: docker exec -u gh:gh -w /home/gh/${{ env.qbt_build_dir }}/completed ${container_name} mv -f qbittorrent-nox ${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}qbittorrent-nox
-
-      # - name: Generate artifact attestation
-      #   if: env.disable_qt5 != 'yes'
-      #   uses: actions/attest-build-provenance@v2
-      #   with:
-      #     subject-path: "${{ env.qbt_build_dir }}/completed/${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}qbittorrent-nox"
-
-      # - name: Docker - Release Info
-      #   if: env.disable_qt5 != 'yes'
-      #   run: docker exec -u gh:gh -w /home/gh/${{ env.qbt_build_dir }}/release_info ${container_name} bash -c 'mv *.md *.json '/home/gh/${{ env.qbt_build_dir }}/completed''
-
       - name: qt6 version info
         run: |
-          release_tag=$(jq -r '.qt6' ${{ env.qbt_build_dir }}/release_info/qt6-dependency-version.json)
+          qt6_release_tag=$(jq -r '.qt6' ${{ env.qbt_build_dir }}/release_info/qt6-dependency-version.json)
           printf '%s\n' "release_tag=${qt6_release_tag}" >> $GITHUB_ENV
 
       - name: Host - Upload qbt-qt6 and release info artifact
