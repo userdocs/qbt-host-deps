@@ -135,7 +135,6 @@ jobs:
         run: docker exec -u gh:gh ${container_name} bash ${script_name} openssl
 
       - name: Docker - double_conversion
-        if: matrix.qbt_build_tool == '' && env.disable_qt5 != 'yes'
         run: docker exec -u gh:gh ${container_name} bash ${script_name} double_conversion
 
       - name: Docker - qtbase
