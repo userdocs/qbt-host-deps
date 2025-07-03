@@ -174,15 +174,17 @@ jobs:
           qt6_release_tag=$(jq -r '.qt6' ${{ env.qbt_build_dir }}/release_info/qt6-dependency-version.json)
           printf '%s\n' "release_tag=${qt6_release_tag}" >> $GITHUB_ENV
 
-      - name: Host - Upload qbt-qt6 and release info artifact
-        if: success() && env.disable_qt5 != 'yes'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}
-          path: ${{ env.qbt_build_dir }}/*
+      # - name: Host - Upload qbt-qt6 and release info artifact
+      #   if: success() && env.disable_qt5 != 'yes'
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}
+      #     path: ${{ env.qbt_build_dir }}/*
 
       - name: yolo
-        run: tar cJf qt6.tar.xz ${{ env.qbt_build_dir }}
+        run: |
+          rm -rf ${{ env.qbt_build_dir }}/{completed,x86_64-linux-musl,x86_64-linux-musl.tar.gz,graphs,patches,release_info,logs}
+          tar cJf qt6.tar.xz ${{ env.qbt_build_dir }}
 
       - name: Host- Create release - tag - assets
         uses: ncipollo/release-action@v1
