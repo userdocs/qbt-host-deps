@@ -195,6 +195,11 @@ jobs:
       #   if: env.disable_qt5 != 'yes'
       #   run: docker exec -u gh:gh -w /home/gh/${{ env.qbt_build_dir }}/release_info ${container_name} bash -c 'mv *.md *.json '/home/gh/${{ env.qbt_build_dir }}/completed''
 
+      - name: qt6 version info
+        run: |
+          release_tag=$(jq -r '.qt6' ${{ env.qbt_build_dir }}/release_info/qt6-dependency-version.json)
+          printf '%s\n' "release_tag=${qt6_release_tag}" >> $GITHUB_ENV
+
       - name: Host - Upload qbt-qt6 and release info artifact
         if: success() && env.disable_qt5 != 'yes'
         uses: actions/upload-artifact@v4
@@ -202,16 +207,15 @@ jobs:
           name: ${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}
           path: ${{ env.qbt_build_dir }}/*
 
-      # - name: Host - Upload cmake graphs artifact
-      #   if: success() && matrix.qbt_build_tool == '' && env.disable_qt5 != 'yes'
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: "${{ matrix.qbt_cross_name }}-graphs"
-      #     path: "${{ env.qbt_build_dir }}/completed/*.png"
+      - name: yolo
+        run: tar cJf qt6.tar.xz ${{ env.qbt_build_dir }}
 
-      - name: Host - Upload logs on error
-        if: failure() && env.disable_qt5 != 'yes'
-        uses: actions/upload-artifact@v4
+      - name: Host- Create release - tag - assets
+        uses: ncipollo/release-action@v1
         with:
-          name: "${{ matrix.qbt_cross_name }}-logs"
-          path: "${{ env.qbt_build_dir }}/logs/*"
+          artifacts: "qt6.tar.xz"
+          replacesArtifacts: true
+          tag: "${{ env.release_tag }}"
+          name: "${{ env.release_tag }}"
+          allowUpdates: true
+          token: "${{ github.token }}"
