@@ -149,19 +149,28 @@ jobs:
           printf '%s\n' "release_tag=v${qt6_release_tag}"
           printf '%s\n' "release_tag=v${qt6_release_tag}" >> $GITHUB_ENV
 
-      - name: archive ${{ env.qbt_build_dir }}
+      - name: clean ${{ env.qbt_build_dir }}
         run: |
-          readarray -t contents < <(tar -tf "${qbt_build_dir}/x86_64-linux-musl.tar.gz")
+          # mcm stuff
+          rm -rf ${qbt_build_dir}/bin/ninja
+          rm -rf ${qbt_build_dir}/bin/x86_64-linux-musl-*
+          rm -rf ${qbt_build_dir}/lib/gcc
+          rm -rf ${qbt_build_dir}/lib/bfd-plugins
+          rm -rf ${qbt_build_dir}/libexec/gcc
+          rm -rf ${qbt_build_dir}/share/gcc-*
+          rm -rf ${qbt_build_dir}/share/man
+          rm -rf ${qbt_build_dir}/x86_64-linux-musl
+          rm -rf ${qbt_build_dir}/x86_64-linux-musl.tar.gz
 
-          # Loop and delete only files from x86_64-linux-musl.tar.gz
-          for path in "${contents[@]/x86_64-linux-musl\/}"; do
-              # Check if it's a file and delete
-              [[ -f "${qbt_build_dir}/$path" ]] && rm -rf "${qbt_build_dir}/$path"
-          done
+          # qbt stuff
+          rm -rf ${qbt_build_dir}/completed
+          rm -rf ${qbt_build_dir}/graphs
+          rm -rf ${qbt_build_dir}/patches
+          rm -rf ${qbt_build_dir}/release_info
+          rm -rf ${qbt_build_dir}/logs
 
-          rm -rf ${qbt_build_dir}/{bin/ninja,completed,graphs,patches,release_info,logs,x86_64-linux-musl.tar.gz}
-
-          tar cJf "${name}.tar.xz" "${qbt_build_dir}"
+      - name: archive ${{ env.qbt_build_dir }}
+        run: tar cJf "${name}.tar.xz" "${qbt_build_dir}"
 
       - name: Generate artifact attestation  ${{ inputs.distinct_id }}
         uses: actions/attest-build-provenance@v2
