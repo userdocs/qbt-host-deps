@@ -36,7 +36,7 @@ jobs:
       - name: Host- Create release - tag - assets
         uses: ncipollo/release-action@v1
         with:
-          pattern: "release/*.tar.xz"
+          artifacts: "release/*.tar.xz"
           replacesArtifacts: true
           tag: "${{ inputs.release_tag }}"
           name: "${{ inputs.release_tag }}"
