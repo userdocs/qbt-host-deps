@@ -20,13 +20,19 @@ on:
         description: "script name"
         required: true
         type: string
+    outputs:
+      release_tag:
+        value: ${{ jobs.build-alpine.outputs.release_tag }}
+
 jobs:
   build-alpine:
-    name: "${{ matrix.qbt_cross_name }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
+    outputs:
+      release_tag: ${{ steps.build_outputs.outputs.release_tag }}
     runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
       matrix:
+        name: "${{ matrix.qbt_cross_name }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
         os_id: [alpine]
         os_version_id: [edge]
         qbt_cross_name: ["x86_64"]
@@ -48,7 +54,7 @@ jobs:
       qbt_build_dir: "qbt-build"
       script_name: ${{ inputs.script_name }}
       container_name: "multiarch"
-      name: "${{ matrix.qbt_cross_name }}-qt6-${{ matrix.suffix }}"
+      name: "${{ matrix.name }}"
 
     steps:
       - name: Checkout
@@ -186,19 +192,19 @@ jobs:
           rm -rf ${qbt_build_dir}/.active-toolchain-info
 
       - name: archive ${{ env.qbt_build_dir }}
-        run: tar cJf "${name}.tar.xz" "${qbt_build_dir}"
+        run: tar cJf "${{ matrix.name }}.tar.xz" "${qbt_build_dir}"
 
       - name: Generate artifact attestation  ${{ inputs.distinct_id }}
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: "${{ env.name }}.tar.xz"
+          subject-path: "${{ matrix.name }}.tar.xz"
 
-      - name: Host- Create release - tag - assets
-        uses: ncipollo/release-action@v1
+      - name: Host - Upload ${{ matrix.name }}
+        uses: actions/upload-artifact@v4
         with:
-          artifacts: "${{ env.name }}.tar.xz"
-          replacesArtifacts: true
-          tag: "${{ env.release_tag }}"
-          name: "${{ env.release_tag }}"
-          allowUpdates: true
-          token: "${{ github.token }}"
+          name: "${{ matrix.name }}"
+          path: "${{ matrix.name }}.tar.xz"
+
+      - name: Set outputs
+        id: build_outputs
+        run: printf '%s\n' "release_tag=${release_tag}" >> $GITHUB_OUTPUT

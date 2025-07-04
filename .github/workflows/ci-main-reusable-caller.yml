@@ -65,6 +65,19 @@ jobs:
       debug: ${{ github.event.inputs.debug == 'true' && 'yes' || 'no' }}
       script_name: ${{ github.event.inputs.script_name }}
 
+  ci-alpine-release:
+    needs: [ci-alpine-build]
+    if: github.event.inputs.release == 'true' && contains(needs.*.result, 'success') && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    concurrency:
+      group: ci-alpine-release
+      cancel-in-progress: true
+    permissions:
+      contents: write
+    uses: ./.github/workflows/ci-alpine-release.yml
+    with:
+      distinct_id: ${{ github.event.inputs.distinct_id }}
+      release_tag: ${{ needs.ci-alpine-build.outputs.release_tag }}
+
   ci-auto-rerun-failed-jobs:
     if: failure() && (github.event.inputs.skip_rerun || 'false') == 'false'
     needs: [ci-alpine-build]
