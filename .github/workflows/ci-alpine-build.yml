@@ -34,7 +34,7 @@ jobs:
       matrix:
         os_id: [alpine]
         os_version_id: [edge]
-        qbt_cross_name: ["x86_64"]
+        qbt_cross_name: ["x86_64", "aarch64"]
         set_skip_icu: ["yes", "no"]
         qbt_libtorrent_version: ["", "1.2", "2.0"]
         include:

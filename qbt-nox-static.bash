@@ -203,6 +203,9 @@ _set_default_values() {
 	# Env setting for the icu tag
 	qbt_skip_icu="${qbt_skip_icu:-yes}"
 
+	# Default to expecting qemu to be present for qt6 builds. No will pull in this prebuilt dependency package https://github.com/userdocs/qbt-qt6
+	qbt_qt6_qemu="${qbt_qt6_qemu:-yes}"
+
 	# Env setting for the boost tag
 	if [[ "${qbt_libtorrent_version}" == "1.2" || "${qbt_libtorrent_tag}" =~ ^(v1\.2\.|RC_1_2) ]]; then
 		qbt_boost_tag="${qbt_boost_tag:-boost-1.86.0}"
@@ -530,7 +533,8 @@ _print_env() {
 	printf '%b\n' " ${color_yellow_light}  qbt_build_debug=\"${color_green_light}${qbt_build_debug}${color_yellow_light}\"${color_end}"
 	printf '%b\n' " ${color_yellow_light}  qbt_standard=\"${color_green_light}${qbt_standard}${color_yellow_light}\"${color_end}"
 	printf '%b\n' " ${color_yellow_light}  qbt_static_ish=\"${color_green_light}${qbt_static_ish}${color_yellow_light}\"${color_end}"
-	printf '%b\n\n' " ${color_yellow_light}  qbt_optimise=\"${color_green_light}${qbt_optimise}${color_yellow_light}\"${color_end}"
+	printf '%b\n' " ${color_yellow_light}  qbt_optimise=\"${color_green_light}${qbt_optimise}${color_yellow_light}\"${color_end}"
+	printf '%b\n\n' " ${color_yellow_light}  qbt_qt6_qemu=\"${color_green_light}${qbt_qt6_qemu}${color_yellow_light}\"${color_end}"
 }
 #######################################################################################################################################################
 # This function converts a version string to a number for comparison purposes.
@@ -2041,7 +2045,13 @@ _multi_arch() {
 			if [[ "${qbt_build_tool}" == 'cmake' ]]; then
 				multi_libtorrent=("-D CMAKE_CXX_COMPILER=${qbt_cross_host}-g++")        # ${multi_libtorrent[@]}
 				multi_double_conversion=("-D CMAKE_CXX_COMPILER=${qbt_cross_host}-g++") # ${multi_double_conversion[@]}
+				multi_qtbase=("-D CMAKE_CXX_COMPILER=${qbt_cross_host}-g++")            # ${multi_qtbase[@]}
+				multi_qttools=("-D CMAKE_CXX_COMPILER=${qbt_cross_host}-g++")           # ${multi_qttools[@]}
 				multi_qbittorrent=("-D CMAKE_CXX_COMPILER=${qbt_cross_host}-g++")       # ${multi_qbittorrent[@]}
+
+				if [[ "${qbt_qt6_qemu}" == "no" ]]; then
+					multi_qtbase+=("-D QT_HOST_PATH=/usr/local")
+				fi
 			else
 				multi_libtorrent=("toolset=${qbt_cross_boost:-gcc}") # ${multi_libtorrent[@]}
 				multi_qbittorrent=("--host=${qbt_cross_host}")       # ${multi_qbittorrent[@]}
@@ -3064,7 +3074,7 @@ _qtbase() {
 	if [[ "${qbt_build_tool}" == 'cmake' && "${qbt_qt_version}" =~ ^6 ]]; then
 		mkdir -p "${qbt_install_dir}/graphs/${app_name}/${app_version["${app_name}"]}"
 		cmake -Wno-dev -Wno-deprecated --graphviz="${qbt_install_dir}/graphs/${app_name}/${app_version["${app_name}"]}/dep-graph.dot" -G Ninja -B build \
-			"${multi_libtorrent[@]}" \
+			"${multi_qtbase[@]}" \
 			-D CMAKE_VERBOSE_MAKEFILE="${qbt_cmake_debug}" \
 			-D CMAKE_BUILD_TYPE="release" \
 			-D QT_FEATURE_optimize_full=on -D QT_FEATURE_static=on -D QT_FEATURE_shared=off \
@@ -3112,7 +3122,7 @@ _qttools() {
 	if [[ "${qbt_build_tool}" == 'cmake' && "${qbt_qt_version}" =~ ^6 ]]; then
 		mkdir -p "${qbt_install_dir}/graphs/${app_name}/${app_version["${app_name}"]}"
 		cmake -Wno-dev -Wno-deprecated --graphviz="${qbt_install_dir}/graphs/${app_name}/${app_version["${app_name}"]}/dep-graph.dot" -G Ninja -B build \
-			"${multi_libtorrent[@]}" \
+			"${multi_qttools[@]}" \
 			-D CMAKE_VERBOSE_MAKEFILE="${qbt_cmake_debug}" \
 			-D CMAKE_BUILD_TYPE="release" \
 			-D CMAKE_CXX_STANDARD="${qbt_standard}" \
