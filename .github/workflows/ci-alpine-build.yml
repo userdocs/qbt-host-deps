@@ -142,11 +142,11 @@ jobs:
         run: docker exec -u gh:gh ${container_name} bash ${script_name} openssl
 
       - name: Docker - boost
-        if: qbt_libtorrent_version
+        if: matrix.qbt_libtorrent_version
         run: docker exec -u gh:gh ${container_name} bash ${script_name} boost
 
       - name: Docker - libtorrent
-        if: qbt_libtorrent_version
+        if: matrix.qbt_libtorrent_version
         run: docker exec -u gh:gh ${container_name} bash ${script_name} libtorrent
 
       - name: Docker - double_conversion
