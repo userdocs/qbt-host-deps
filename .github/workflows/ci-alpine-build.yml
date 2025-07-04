@@ -22,7 +22,7 @@ on:
         type: string
 jobs:
   build-alpine:
-    name: "${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}-${{ matrix.suffix }}"
+    name: "${{ matrix.qbt_cross_name }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
     runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
@@ -31,18 +31,24 @@ jobs:
         os_version_id: [edge]
         qbt_cross_name: ["x86_64"]
         set_skip_icu: ["yes", "no"]
-        qbt_qt_version_name: ["qt6"]
+        qbt_libtorrent_version: ["", "1.2", "2.0"]
         include:
           - set_skip_icu: "yes"
             suffix: "iconv"
           - set_skip_icu: "no"
             suffix: "icu"
+          - qbt_libtorrent_version: ""
+            libtorrent_info: ""
+          - qbt_libtorrent_version: "1.2"
+            libtorrent_info: "-lt12"
+          - qbt_libtorrent_version: "2.0"
+            libtorrent_info: "-lt20"
 
     env:
       qbt_build_dir: "qbt-build"
       script_name: ${{ inputs.script_name }}
       container_name: "multiarch"
-      name: "${{ matrix.qbt_cross_name }}-${{ matrix.qbt_qt_version_name }}-${{ matrix.suffix }}"
+      name: "${{ matrix.qbt_cross_name }}-qt6-${{ matrix.suffix }}"
 
     steps:
       - name: Checkout
@@ -60,6 +66,7 @@ jobs:
           printf '%s\n' "qbt_cross_name=${{ matrix.qbt_cross_name }}" >> env.custom
           printf '%s\n' "qbt_patches_url=${{ github.repository }}" >> env.custom
           printf '%s\n' "qbt_skip_icu=${{ matrix.set_skip_icu }}" >> env.custom
+          printf '%s\n' "qbt_libtorrent_version=${{ matrix.qbt_libtorrent_version }}" >> env.custom
           printf '%s\n' "qbt_qt_tag=${{ matrix.qbt_qt_tag }}" >> env.custom
           printf '%s\n' "qbt_workflow_files=${set_workflow_files}" >> env.custom
           printf '%s\n' "qbt_build_debug=${set_build_debug}" >> env.custom
@@ -133,6 +140,14 @@ jobs:
 
       - name: Docker - openssl
         run: docker exec -u gh:gh ${container_name} bash ${script_name} openssl
+
+      - name: Docker - boost
+        if: qbt_libtorrent_version
+        run: docker exec -u gh:gh ${container_name} bash ${script_name} boost
+
+      - name: Docker - libtorrent
+        if: qbt_libtorrent_version
+        run: docker exec -u gh:gh ${container_name} bash ${script_name} libtorrent
 
       - name: Docker - double_conversion
         run: docker exec -u gh:gh ${container_name} bash ${script_name} double_conversion
