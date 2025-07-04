@@ -30,13 +30,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: "release"
-          pattern: "*-qt6-*\\.tar\\.xz"
+          pattern: "*-qt6-*.tar.xz"
           merge-multiple: true
 
       - name: Host- Create release - tag - assets
         uses: ncipollo/release-action@v1
         with:
-          pattern: "release/*-qt6-*\\.tar\\.xz"
+          pattern: "release/*.tar.xz"
           replacesArtifacts: true
           tag: "${{ inputs.release_tag }}"
           name: "${{ inputs.release_tag }}"
