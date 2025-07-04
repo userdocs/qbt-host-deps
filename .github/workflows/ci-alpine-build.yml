@@ -32,7 +32,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name: "${{ matrix.qbt_cross_name }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
         os_id: [alpine]
         os_version_id: [edge]
         qbt_cross_name: ["x86_64"]
@@ -50,11 +49,13 @@ jobs:
           - qbt_libtorrent_version: "2.0"
             libtorrent_info: "-lt20"
 
+    name: "${{ matrix.qbt_cross_name }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
+
     env:
       qbt_build_dir: "qbt-build"
       script_name: ${{ inputs.script_name }}
       container_name: "multiarch"
-      name: "${{ matrix.name }}"
+      name: "${{ jobs.build-alpine.name }}"
 
     steps:
       - name: Checkout
