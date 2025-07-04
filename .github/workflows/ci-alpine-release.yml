@@ -30,7 +30,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: "release"
-          pattern: "*-qt6-*.tar.xz"
+          pattern: "*-qt6-*"
           merge-multiple: true
 
       - name: Host- Create release - tag - assets
