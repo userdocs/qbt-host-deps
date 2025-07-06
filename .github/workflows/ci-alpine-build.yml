@@ -34,35 +34,33 @@ jobs:
       matrix:
         os_id: ["alpine"]
         os_version_id: ["edge"]
-        qbt_cross_name: ["", "x86_64", "aarch64"] # Add this line
+        native_or_cross:
+          ["x86_64-native", "x86_64-cross", "aarch64-native", "aarch64-cross"]
         set_skip_icu: ["yes", "no"]
         qbt_libtorrent_version: ["", "1.2", "2.0"]
         include:
-          # Map each qbt_cross_name to the appropriate runner and native_or_cross value
-          - qbt_cross_name: ""
+          - native_or_cross: "x86_64-native"
+            qbt_cross_name: ""
             runs_on: "ubuntu-24.04"
-            native_or_cross: "x86_64-native"
 
-          - qbt_cross_name: ""
+          - native_or_cross: "x86_64-cross"
+            qbt_cross_name: ""
             runs_on: "ubuntu-24.04-arm"
-            native_or_cross: "aarch64-native"
 
-          - qbt_cross_name: "x86_64"
+          - native_or_cross: "aarch64-native"
+            qbt_cross_name: "x86_64"
             runs_on: "ubuntu-24.04-arm"
-            native_or_cross: "-cross"
 
-          - qbt_cross_name: "aarch64"
+          - native_or_cross: "aarch64-cross"
+            qbt_cross_name: "aarch64"
             runs_on: "ubuntu-24.04-arm"
-            native_or_cross: "-cross"
 
-          # Define suffix values
           - set_skip_icu: "yes"
             suffix: "iconv"
 
           - set_skip_icu: "no"
             suffix: "icu"
 
-          # Define libtorrent info values
           - qbt_libtorrent_version: ""
             libtorrent_info: ""
 
@@ -71,14 +69,8 @@ jobs:
 
           - qbt_libtorrent_version: "2.0"
             libtorrent_info: "-lt20"
-        # exclude:
-        #   # Exclude specific combinations
-        #   - qbt_cross_name: "x86_64"
-        #     runs_on: "ubuntu-24.04"
-        #   - qbt_cross_name: "aarch64"
-        #     runs_on: "ubuntu-24.04"
 
-    name: "${{ matrix.qbt_cross_name }}${{ matrix.native_or_cross }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
+    name: "${{ matrix.native_or_cross }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
 
     env:
       qbt_build_dir: "qbt-build"
