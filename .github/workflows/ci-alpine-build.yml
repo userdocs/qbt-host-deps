@@ -59,7 +59,7 @@ jobs:
             native_or_cross: "-cross"
           - qbt_cross_name: "aarch64"
             native_or_cross: "-cross"
-        ignore:
+        exclude:
           - runs_on: "ubuntu-24.04"
             qbt_cross_name: "x86_64"
           - runs_on: "ubuntu-24.04"
