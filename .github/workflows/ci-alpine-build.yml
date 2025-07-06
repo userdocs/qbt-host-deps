@@ -61,7 +61,9 @@ jobs:
             native_or_cross: "-cross"
         ignore:
           - runs_on: "ubuntu-24.04"
-            qbt_cross_name: ["x86_64", "aarch64"]
+            qbt_cross_name: "x86_64"
+          - runs_on: "ubuntu-24.04"
+            qbt_cross_name: "aarch64"
 
     name: "${{ matrix.qbt_cross_name }}${{ matrix.native_or_cross }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
 
