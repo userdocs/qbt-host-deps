@@ -76,7 +76,7 @@ jobs:
       qbt_build_dir: "qbt-build"
       script_name: ${{ inputs.script_name }}
       container_name: "multiarch"
-      name: "${{ matrix.qbt_cross_name }}${{ matrix.native_or_cross }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
+      name: "${{ matrix.native_or_cross }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
 
     steps:
       - name: Checkout
