@@ -32,6 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        runs-on: [ubuntu-24.04]
         os_id: [alpine]
         os_version_id: [edge]
         qbt_cross_name: ["", "x86_64", "aarch64"]
