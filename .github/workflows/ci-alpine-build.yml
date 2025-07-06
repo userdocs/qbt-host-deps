@@ -28,13 +28,13 @@ jobs:
   build-alpine:
     outputs:
       release_tag: ${{ steps.build_outputs.outputs.release_tag }}
-    runs-on: ubuntu-24.04-arm
+    runs-on: ["ubuntu-24.04", "ubuntu-24.04-arm"]
     strategy:
       fail-fast: false
       matrix:
         os_id: [alpine]
         os_version_id: [edge]
-        qbt_cross_name: ["x86_64", "aarch64"]
+        qbt_cross_name: ["", "x86_64", "aarch64"]
         set_skip_icu: ["yes", "no"]
         qbt_libtorrent_version: ["", "1.2", "2.0"]
         include:
@@ -48,14 +48,23 @@ jobs:
             libtorrent_info: "-lt12"
           - qbt_libtorrent_version: "2.0"
             libtorrent_info: "-lt20"
+          - qbt_cross_name: ""
+            native_or_cross: "native"
+          - qbt_cross_name: "x86_64"
+            native_or_cross: "cross"
+          - qbt_cross_name: "aarch64"
+            native_or_cross: "cross"
+        ignore:
+          - ubuntu-24.04:
+              qbt_cross_name: ["x86_64", "aarch64"]
 
-    name: "${{ matrix.qbt_cross_name }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
+    name: "${{ matrix.qbt_cross_name }}-${{ matrix.native_or_cross }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
 
     env:
       qbt_build_dir: "qbt-build"
       script_name: ${{ inputs.script_name }}
       container_name: "multiarch"
-      name: "${{ matrix.qbt_cross_name }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
+      name: "${{ matrix.qbt_cross_name }}-${{ matrix.native_or_cross }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
 
     steps:
       - name: Checkout

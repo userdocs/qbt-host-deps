@@ -107,8 +107,10 @@ os_version_id="$(get_os_info VERSION_ID)"                                       
 [[ "${os_id}" =~ ^(alpine)$ ]] && os_version_codename="alpine"                    # If alpine, set the codename to alpine. We check for min v3.10 later with codenames.
 
 if [[ "${os_id}" =~ ^(debian|ubuntu)$ ]]; then
+	# dpkg --print-architecture give amd64/arm64 and arch gives x86_64/aarch64
 	os_arch="$(dpkg --print-architecture)"
 elif [[ "${os_id}" =~ ^(alpine)$ ]]; then
+	# apk --print-arch gives x86_64/aarch64
 	os_arch="$(apk --print-arch)"
 fi
 
@@ -203,8 +205,9 @@ _set_default_values() {
 	# Env setting for the icu tag
 	qbt_skip_icu="${qbt_skip_icu:-yes}"
 
-	# Default to expecting qemu to be present for qt6 builds. No will pull in this prebuilt dependency package https://github.com/userdocs/qbt-qt6
-	qbt_qt6_qemu="${qbt_qt6_qemu:-yes}"
+	# Default to expecting qemu to be present for qt6 builds. No will pull in this prebuilt dependency package https://github.com/userdocs/qbt-host-deps
+	qbt_host_deps_qt6="${qbt_host_deps_qt6:-no}"
+	qbt_host_deps_full="${qbt_host_deps_full:-no}"
 
 	# Env setting for the boost tag
 	if [[ "${qbt_libtorrent_version}" == "1.2" || "${qbt_libtorrent_tag}" =~ ^(v1\.2\.|RC_1_2) ]]; then
@@ -534,7 +537,9 @@ _print_env() {
 	printf '%b\n' " ${color_yellow_light}  qbt_standard=\"${color_green_light}${qbt_standard}${color_yellow_light}\"${color_end}"
 	printf '%b\n' " ${color_yellow_light}  qbt_static_ish=\"${color_green_light}${qbt_static_ish}${color_yellow_light}\"${color_end}"
 	printf '%b\n' " ${color_yellow_light}  qbt_optimise=\"${color_green_light}${qbt_optimise}${color_yellow_light}\"${color_end}"
-	printf '%b\n\n' " ${color_yellow_light}  qbt_qt6_qemu=\"${color_green_light}${qbt_qt6_qemu}${color_yellow_light}\"${color_end}"
+	printf '%b\n' " ${color_yellow_light}  qbt_host_deps_qt6=\"${color_green_light}${qbt_host_deps_qt6}${color_yellow_light}\"${color_end}"
+	printf '%b\n' " ${color_yellow_light}  qbt_host_deps_full=\"${color_green_light}${qbt_host_deps_full}${color_yellow_light}\"${color_end}"
+	printf '%b\n\n' " ${color_yellow_light}  qbt_host_deps_url=\"${color_green_light}${qbt_host_deps_url}${color_yellow_light}\"${color_end}"
 }
 #######################################################################################################################################################
 # This function converts a version string to a number for comparison purposes.
@@ -1133,6 +1138,62 @@ _test_url() {
 	fi
 }
 #######################################################################################################################################################
+# URL test for normal use and proxy use - make sure we can reach google.com before processing the URL functions
+#######################################################################################################################################################
+_qbt_host_deps() {
+
+	# Validate dependency options - they're mutually exclusive - no default setting as we cannot know which option was intended.
+	if [[ "${qbt_host_deps_qt6}" == "yes" && "${qbt_host_deps_full}" == "yes" ]]; then
+		printf '\n%b\n\n' " ${unicode_red_circle} ${color_red}Configuration error${color_end}: ${color_yellow}qbt_host_deps_qt6${color_end} and ${color_yellow}qbt_host_deps_full${color_end} can't both be set to ${color_green}yes${color_end}."
+		exit 1
+	fi
+
+	if [[ "${qbt_host_deps_qt6}" == "yes" && "${qbt_host_deps_full}" == "no" ]] || [[ "${qbt_host_deps_qt6}" == "no" && "${qbt_host_deps_full}" == "yes" ]]; then
+		# Default to expecting qemu to be present for qt6 builds. No will pull in these prebuilt dependency packages https://github.com/userdocs/qbt-host-deps
+		qbt_host_deps_qt6="${qbt_host_deps_qt6:-no}"   # qt6 only
+		qbt_host_deps_full="${qbt_host_deps_full:-no}" # qt6 + libtorrent
+
+		if [[ "${os_arch}" =~ ^(amd64|x86_64)$ ]]; then
+			host_arch="x86_64"
+		elif [[ "${os_arch}" =~ ^(arm64|aarch64)$ ]]; then
+			host_arch="aarch64"
+		else
+			printf '%b\n' " ${unicode_red_circle} Unsupported host architecture for prebuilt dependencies."
+			printf '%b\n' " ${unicode_red_circle} Only x86_64 or aarch64 hosts supported for crossbuiilding"
+			exit 1
+
+		fi
+
+		if [[ "${qbt_host_deps_qt6}" == "yes" ]]; then # Qt6 dependencies only
+			if [[ "${qbt_skip_icu}" == "yes" ]]; then
+				host_deps_url="https://github.com/userdocs/qbt-host-deps/releases/latest/download/${host_arch}-qt6-iconv.tar.xz"
+			else
+				host_deps_url="https://github.com/userdocs/qbt-host-deps/releases/latest/download/${host_arch}-qt6-icu.tar.xz"
+			fi
+			qbt_modules_install_processed=("boost" "libtorrent" "qbittorrent")
+		elif [[ "${qbt_host_deps_full}" == "yes" ]]; then # Full dependencies including libtorrent
+			if [[ "${qbt_libtorrent_version}" == "1.2" ]]; then
+				if [[ "${qbt_skip_icu}" == "yes" ]]; then
+					host_deps_url="https://github.com/userdocs/qbt-host-deps/releases/latest/download/${host_arch}-qt6-iconv-lt12.tar.xz"
+				else
+					host_deps_url="https://github.com/userdocs/qbt-host-deps/releases/latest/download/${host_arch}-qt6-icu-lt12.tar.xz"
+				fi
+			elif [[ "${qbt_libtorrent_version}" == "2.0" ]]; then
+				if [[ "${qbt_skip_icu}" == "yes" ]]; then
+					host_deps_url="https://github.com/userdocs/qbt-host-deps/releases/latest/download/${host_arch}-qt6-iconv-lt20.tar.xz"
+				else
+					host_deps_url="https://github.com/userdocs/qbt-host-deps/releases/latest/download/${host_arch}-qt6-icu-lt20.tar.xz"
+				fi
+			fi
+			qbt_modules_install_processed=("qbittorrent")
+		fi
+		qbt_host_deps_url="${host_deps_url}"
+		source_default["qbt_qt6"]="file"
+		source_archive_url["qbt_qt6"]="${host_deps_url}"
+		_download qbt_qt6
+	fi
+}
+###############################Y########################################################################################################################
 # This function sets the build and installation directory. If the argument -b is used to set a build directory that directory is set and used.
 # If nothing is specified or the switch is not used it defaults to the hard-coded path relative to the scripts location - qbittorrent-build
 #######################################################################################################################################################
@@ -2049,7 +2110,7 @@ _multi_arch() {
 				multi_qttools=("-D CMAKE_CXX_COMPILER=${qbt_cross_host}-g++")           # ${multi_qttools[@]}
 				multi_qbittorrent=("-D CMAKE_CXX_COMPILER=${qbt_cross_host}-g++")       # ${multi_qbittorrent[@]}
 
-				if [[ "${qbt_qt6_qemu}" == "no" ]]; then
+				if [[ "${qbt_host_deps_qt6}" == "yes" || "${qbt_host_deps_full}" == "yes" ]]; then
 					multi_qtbase+=("-D QT_HOST_PATH=/usr/local")
 				fi
 			else
@@ -2822,6 +2883,7 @@ _set_cxx_standard
 _set_build_cons
 _debug "${@}"                # requires shifted params from options block 2
 _installation_modules "${@}" # requires shifted params from options block 2
+_qbt_host_deps
 #######################################################################################################################################################
 # If any modules fail the qbt_modules_test then exit now.
 #######################################################################################################################################################
