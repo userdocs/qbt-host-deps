@@ -28,6 +28,7 @@ jobs:
   build-alpine:
     outputs:
       release_tag: ${{ steps.build_outputs.outputs.release_tag }}
+    runs-on: "${{ matrix.runs_on }}"
     strategy:
       fail-fast: false
       matrix:
@@ -67,8 +68,6 @@ jobs:
           - qbt_cross_name: "aarch64"
             runs-on: "ubuntu-24.04-arm"
             native_or_cross: "-cross"
-
-    runs-on: "${{ matrix.runs_on }}"
 
     name: "${{ matrix.qbt_cross_name }}${{ matrix.native_or_cross }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
 
