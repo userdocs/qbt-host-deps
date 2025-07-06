@@ -34,30 +34,40 @@ jobs:
       matrix:
         os_id: [alpine]
         os_version_id: [edge]
-        runs_on: ["ubuntu-24.04", "ubuntu-24.04-arm"]
+        runs_on: "${{ matrix.runs_on }}"
         qbt_cross_name: ["", "x86_64", "aarch64"]
         set_skip_icu: ["yes", "no"]
         qbt_libtorrent_version: ["", "1.2", "2.0"]
         include:
           - set_skip_icu: "yes"
             suffix: "iconv"
+
           - set_skip_icu: "no"
             suffix: "icu"
+
           - qbt_libtorrent_version: ""
             libtorrent_info: ""
+
           - qbt_libtorrent_version: "1.2"
             libtorrent_info: "-lt12"
+
           - qbt_libtorrent_version: "2.0"
             libtorrent_info: "-lt20"
+
           - qbt_cross_name: ""
             runs-on: "ubuntu-24.04"
             native_or_cross: "x86_64-native"
+
           - qbt_cross_name: ""
             runs-on: "ubuntu-24.04-arm"
             native_or_cross: "aarch64-native"
+
           - qbt_cross_name: "x86_64"
+            runs-on: "ubuntu-24.04-arm"
             native_or_cross: "-cross"
+
           - qbt_cross_name: "aarch64"
+            runs-on: "ubuntu-24.04-arm"
             native_or_cross: "-cross"
         exclude:
           - runs_on: "ubuntu-24.04"
