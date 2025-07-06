@@ -35,32 +35,24 @@ jobs:
         # runs_on: ["ubuntu-24.04"]
         os_id: ["alpine"]
         os_version_id: ["edge"]
+        qbt_cross_name: ["", "x86_64", "aarch64"] # Add this line
         set_skip_icu: ["yes", "no"]
         qbt_libtorrent_version: ["", "1.2", "2.0"]
         include:
-          # Define complete combinations here
-          - os_id: "alpine"
-            os_version_id: "edge"
-            qbt_cross_name: ""
+          # Map each qbt_cross_name to the appropriate runner and native_or_cross value
+          - qbt_cross_name: ""
             runs_on: "ubuntu-24.04"
             native_or_cross: "x86_64-native"
 
-          - os_id: "alpine"
-            os_version_id: "edge"
-            qbt_cross_name: ""
+          - qbt_cross_name: ""
             runs_on: "ubuntu-24.04-arm"
             native_or_cross: "aarch64-native"
 
-          # Add other cross compilation configurations
-          - os_id: "alpine"
-            os_version_id: "edge"
-            qbt_cross_name: "x86_64"
+          - qbt_cross_name: "x86_64"
             runs_on: "ubuntu-24.04-arm"
             native_or_cross: "-cross"
 
-          - os_id: "alpine"
-            os_version_id: "edge"
-            qbt_cross_name: "aarch64"
+          - qbt_cross_name: "aarch64"
             runs_on: "ubuntu-24.04-arm"
             native_or_cross: "-cross"
 
@@ -80,6 +72,12 @@ jobs:
 
           - qbt_libtorrent_version: "2.0"
             libtorrent_info: "-lt20"
+        exclude:
+          # Exclude specific combinations
+          - qbt_cross_name: "x86_64"
+            runs_on: "ubuntu-24.04"
+          - qbt_cross_name: "aarch64"
+            runs_on: "ubuntu-24.04"
 
     name: "${{ matrix.qbt_cross_name }}${{ matrix.native_or_cross }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
 
