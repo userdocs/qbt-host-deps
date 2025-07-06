@@ -55,12 +55,17 @@ jobs:
             libtorrent_info: "-lt20"
 
           - qbt_cross_name: ""
-            runs_on: "ubuntu-24.04"
+            runs_on: ["ubuntu-24.04", "ubuntu-24.04-arm"]
+
+          - runs_on: "ubuntu-24.04"
             native_or_cross: "x86_64-native"
 
-          - qbt_cross_name: ""
-            runs_on: "ubuntu-24.04-arm"
+          - runs_on: "ubuntu-24.04"
             native_or_cross: "aarch64-native"
+
+          # - qbt_cross_name: ""
+          #   runs_on: "ubuntu-24.04-arm"
+          #   native_or_cross: "aarch64-native"
 
           - qbt_cross_name: "x86_64"
             runs_on: "ubuntu-24.04-arm"
