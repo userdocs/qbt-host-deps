@@ -44,11 +44,11 @@ jobs:
             runs_on: "ubuntu-24.04"
 
           - native_or_cross: "x86_64-cross"
-            qbt_cross_name: ""
+            qbt_cross_name: "x86_64"
             runs_on: "ubuntu-24.04-arm"
 
           - native_or_cross: "aarch64-native"
-            qbt_cross_name: "x86_64"
+            qbt_cross_name: ""
             runs_on: "ubuntu-24.04-arm"
 
           - native_or_cross: "aarch64-cross"
@@ -93,6 +93,7 @@ jobs:
           printf '%s\n' "qbt_qt_version=${{ matrix.qbt_qt_version }}" >> env.custom
           printf '%s\n' "qbt_cross_name=${{ matrix.qbt_cross_name }}" >> env.custom
           printf '%s\n' "qbt_patches_url=${{ github.repository }}" >> env.custom
+          printf '%s\n' "qbt_mcm_url=userdocs/qbt-musl-cross-make-test" >> env.custom
           printf '%s\n' "qbt_skip_icu=${{ matrix.set_skip_icu }}" >> env.custom
           printf '%s\n' "qbt_libtorrent_version=${{ matrix.qbt_libtorrent_version }}" >> env.custom
           printf '%s\n' "qbt_qt_tag=${{ matrix.qbt_qt_tag }}" >> env.custom
@@ -197,6 +198,7 @@ jobs:
           # mcm stuff
           rm -rf ${qbt_build_dir}/bin/ninja
           rm -rf ${qbt_build_dir}/bin/x86_64-linux-musl-*
+          rm -rf ${qbt_build_dir}/bin/aarch64-linux-musl-*
           rm -rf ${qbt_build_dir}/lib/gcc
           rm -rf ${qbt_build_dir}/lib/bfd-plugins
           rm -rf ${qbt_build_dir}/libexec/gcc
@@ -204,9 +206,12 @@ jobs:
           rm -rf ${qbt_build_dir}/share/man
           rm -rf ${qbt_build_dir}/x86_64-linux-musl
           rm -rf ${qbt_build_dir}/x86_64-linux-musl.tar.gz
+          rm -rf ${qbt_build_dir}/aarch64-linux-musl
+          rm -rf ${qbt_build_dir}/aarch64-linux-musl.tar.gz
 
           # qbt stuff
           rm -rf ${qbt_build_dir}/completed
+          rm -rf ${qbt_build_dir}/boost
           rm -rf ${qbt_build_dir}/graphs
           rm -rf ${qbt_build_dir}/patches
           rm -rf ${qbt_build_dir}/release_info
