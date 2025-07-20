@@ -32,51 +32,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        runs_on: ["ubuntu-24.04", "ubuntu-24.04-arm"]
         os_id: ["alpine"]
         os_version_id: ["edge"]
-        native_or_cross:
-          ["x86_64-native", "x86_64-cross", "aarch64-native", "aarch64-cross"]
         set_skip_icu: ["yes", "no"]
-        qbt_libtorrent_version: ["", "1.2", "2.0"]
         include:
-          - native_or_cross: "x86_64-native"
-            qbt_cross_name: ""
-            runs_on: "ubuntu-24.04"
-
-          - native_or_cross: "x86_64-cross"
-            qbt_cross_name: "x86_64"
-            runs_on: "ubuntu-24.04-arm"
-
-          - native_or_cross: "aarch64-native"
-            qbt_cross_name: ""
-            runs_on: "ubuntu-24.04-arm"
-
-          - native_or_cross: "aarch64-cross"
-            qbt_cross_name: "aarch64"
-            runs_on: "ubuntu-24.04-arm"
+          - runs_on: "ubuntu-24.04"
+            host_arch: "x86_64"
+          - runs_on: "ubuntu-24.04-arm"
+            host_arch: "aarch64"
 
           - set_skip_icu: "yes"
-            suffix: "iconv"
-
+            suffix: ""
           - set_skip_icu: "no"
-            suffix: "icu"
+            suffix: "-icu"
 
-          - qbt_libtorrent_version: ""
-            libtorrent_info: ""
-
-          - qbt_libtorrent_version: "1.2"
-            libtorrent_info: "-lt12"
-
-          - qbt_libtorrent_version: "2.0"
-            libtorrent_info: "-lt20"
-
-    name: "${{ matrix.native_or_cross }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
+    name: "${{ matrix.host_arch }}${{ matrix.suffix }}-host-deps"
 
     env:
       qbt_build_dir: "qbt-build"
       script_name: ${{ inputs.script_name }}
       container_name: "multiarch"
-      name: "${{ matrix.native_or_cross }}-qt6-${{ matrix.suffix }}${{ matrix.libtorrent_info }}"
+      name: "${{ matrix.host_arch }}${{ matrix.suffix }}-host-deps"
 
     steps:
       - name: Checkout
@@ -90,6 +67,8 @@ jobs:
           set_build_debug: ${{ inputs.debug }}
         run: |
           printf '%s\n' "qbt_build_dir=${{ env.qbt_build_dir }}" > env.custom
+          printf '%s\n' "qbt_zlib_type=zlib" >> env.custom
+          printf '%s\n' "qbt_with_qemu=no" >> env.custom
           printf '%s\n' "qbt_qt_version=${{ matrix.qbt_qt_version }}" >> env.custom
           printf '%s\n' "qbt_cross_name=${{ matrix.qbt_cross_name }}" >> env.custom
           printf '%s\n' "qbt_patches_url=${{ github.repository }}" >> env.custom
@@ -104,8 +83,10 @@ jobs:
       # - name: Host - Github env to container
       #   run: env >> env.custom
 
-      - name: Host - check stuff
-        run: export $(cat env.custom) && bash ${script_name}
+      - name: Download qbt-nox-static.bash
+        run: |
+          curl -LO https://raw.githubusercontent.com/userdocs/qbittorrent-nox-static-test/refs/heads/main/qbt-nox-static.bash
+          chmod +x qbt-nox-static.bash
 
       - name: Host - qBittorrent v5 transition
         run: |
@@ -114,18 +95,17 @@ jobs:
               printf '%s\n' "Found file: \`disable-qt5\` -> setting env: \`disable_qt5=yes\`" >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: Host - phased updates
-        run: printf '%s\n' 'APT::Get::Always-Include-Phased-Updates "false";' | sudo tee /etc/apt/apt.conf.d/99-phased-updates
+      # - name: Host - phased updates
+      #   run: printf '%s\n' 'APT::Get::Always-Include-Phased-Updates "false";' | sudo tee /etc/apt/apt.conf.d/99-phased-updates
 
-      - name: Host - update
-        run: sudo apt-get update
+      # - name: Host - update
+      #   run: sudo apt-get update
 
       # - name: Host - upgrade
       #   run: sudo apt-get -y upgrade
 
-      - name: Host - set up qemu-user-static binfmt-support
-
-        run: sudo apt install libpipeline1 qemu-user-static binfmt-support
+      # - name: Host - set up qemu-user-static binfmt-support
+      #   run: sudo apt install qemu-user-static binfmt-support
 
       - name: Host - Create docker ${{ env.multiarch }} container
 
@@ -149,43 +129,41 @@ jobs:
       - name: Docker - apk install bash
         run: docker exec ${container_name} apk add bash
 
-      - name: Docker - Bootstrap test tools
-        run: docker exec ${container_name} bash ${script_name} update install_test
-
-      - name: Docker - Bootstrap core deps
-        run: docker exec ${container_name} bash ${script_name} install_core
+      - name: Docker - bootstrap_deps
+        run: docker exec ${container_name} bash ${script_name} bootstrap_deps
 
       - name: Docker - Bootstrap build
         run: docker exec -u gh:gh ${container_name} bash ${script_name} -bs-a
 
-      - name: Docker - zlib-ng
-        run: docker exec -u gh:gh ${container_name} bash ${script_name} zlib
+      # - name: Docker - zlib
+      #   run: docker exec -u gh:gh ${container_name} bash ${script_name} zlib
 
-      - name: Docker - iconv
-        run: docker exec -u gh:gh ${container_name} bash ${script_name} iconv
+      # - name: Docker - iconv
+      #   run: docker exec -u gh:gh ${container_name} bash ${script_name} iconv
 
-      - name: Docker - icu
-        run: docker exec -u gh:gh ${container_name} bash ${script_name} icu
+      - name: Docker - icu_host_deps
+        if: matrix.set_skip_icu == 'no'
+        run: docker exec -u gh:gh ${container_name} bash ${script_name} icu_host_deps
 
-      - name: Docker - openssl
-        run: docker exec -u gh:gh ${container_name} bash ${script_name} openssl
+      # - name: Docker - openssl
+      #   run: docker exec -u gh:gh ${container_name} bash ${script_name} openssl
 
-      - name: Docker - boost
-        if: matrix.qbt_libtorrent_version
-        run: docker exec -u gh:gh ${container_name} bash ${script_name} boost
+      # - name: Docker - boost
+      #   if: matrix.qbt_libtorrent_version
+      #   run: docker exec -u gh:gh ${container_name} bash ${script_name} boost
 
-      - name: Docker - libtorrent
-        if: matrix.qbt_libtorrent_version
-        run: docker exec -u gh:gh ${container_name} bash ${script_name} libtorrent
+      # - name: Docker - libtorrent
+      #   if: matrix.qbt_libtorrent_version
+      #   run: docker exec -u gh:gh ${container_name} bash ${script_name} libtorrent
 
-      - name: Docker - double_conversion
-        run: docker exec -u gh:gh ${container_name} bash ${script_name} double_conversion
+      # - name: Docker - double_conversion
+      #   run: docker exec -u gh:gh ${container_name} bash ${script_name} double_conversion
 
-      - name: Docker - qtbase
-        run: docker exec -u gh:gh ${container_name} bash ${script_name} qtbase
+      - name: Docker - qtbase_host_deps
+        run: docker exec -u gh:gh ${container_name} bash ${script_name} qtbase_host_deps
 
-      - name: Docker - qttools
-        run: docker exec -u gh:gh ${container_name} bash ${script_name} qttools
+      - name: Docker - qttools_host_deps
+        run: docker exec -u gh:gh ${container_name} bash ${script_name} qttools_host_deps
 
       - name: qt6 release tag
         run: |
@@ -193,44 +171,21 @@ jobs:
           printf '%s\n' "release_tag=v${qt6_release_tag}"
           printf '%s\n' "release_tag=v${qt6_release_tag}" >> $GITHUB_ENV
 
-      - name: clean ${{ env.qbt_build_dir }}
-        run: |
-          # mcm stuff
-          rm -rf ${qbt_build_dir}/bin/ninja
-          rm -rf ${qbt_build_dir}/bin/x86_64-linux-musl-*
-          rm -rf ${qbt_build_dir}/bin/aarch64-linux-musl-*
-          rm -rf ${qbt_build_dir}/lib/gcc
-          rm -rf ${qbt_build_dir}/lib/bfd-plugins
-          rm -rf ${qbt_build_dir}/libexec/gcc
-          rm -rf ${qbt_build_dir}/share/gcc-*
-          rm -rf ${qbt_build_dir}/share/man
-          rm -rf ${qbt_build_dir}/x86_64-linux-musl
-          rm -rf ${qbt_build_dir}/x86_64-linux-musl.tar.gz
-          rm -rf ${qbt_build_dir}/aarch64-linux-musl
-          rm -rf ${qbt_build_dir}/aarch64-linux-musl.tar.gz
-
-          # qbt stuff
-          rm -rf ${qbt_build_dir}/completed
-          rm -rf ${qbt_build_dir}/boost
-          rm -rf ${qbt_build_dir}/graphs
-          rm -rf ${qbt_build_dir}/patches
-          rm -rf ${qbt_build_dir}/release_info
-          rm -rf ${qbt_build_dir}/logs
-          rm -rf ${qbt_build_dir}/.active-toolchain-info
-
       - name: archive ${{ env.qbt_build_dir }}
-        run: tar cJf "${name}.tar.xz" "${qbt_build_dir}"
+        run: |
+          cd "${qbt_build_dir}"
+          tar cJf "${name}.tar.xz" "host_deps"
 
       - name: Generate artifact attestation  ${{ inputs.distinct_id }}
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: "${{ env.name }}.tar.xz"
+          subject-path: "${{ env.qbt_build_dir }}/${{ env.name }}.tar.xz"
 
       - name: Host - Upload ${{ env.name }}
         uses: actions/upload-artifact@v4
         with:
           name: "${{ env.name }}"
-          path: "${{ env.name }}.tar.xz"
+          path: "${{ env.qbt_build_dir }}/${{ env.name }}.tar.xz"
 
       - name: Set outputs
         id: build_outputs
