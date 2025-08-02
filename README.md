@@ -1,23 +1,30 @@
+# QBT Host Dependencies
 
-When cross compiling qt6 wity cmake you need to meet one of these conditions to successfully build it
+## Cross-compiling Qt6 with CMake
 
-- Option 1: Do this on the host machine (not inside the build container)
+When cross-compiling Qt6 with CMake, you need to meet one of these conditions to successfully build it:
 
-Debian based
+### Option 1: Install QEMU emulation on the host machine (Recommended)
+
+**Note:** This must be done on the host machine, not inside the build container.
+
+#### Debian/Ubuntu-based systems
 
 ```bash
 sudo apt install qemu-user-static binfmt-support
 ```
 
-Alpine
+#### Alpine Linux
 
 ```bash
 sudo apk add qemu qemu-openrc
 ```
 
-- Option 2: Install this custom prebuild of qt6 static first to `/usr/local` then set `-D QT_HOST_PATH` with cmake when building qt6.
+### Option 2: Use prebuilt Qt6 static libraries
 
-Example commands:
+If you cannot install QEMU on the host (e.g., when using GitHub Actions `container:`), you can install a custom prebuilt Qt6 static library to `/usr/local` and set `-D QT_HOST_PATH` with CMake when building Qt6.
+
+#### Installation commands
 
 ```bash
 curl -sLO https://github.com/userdocs/qbt-qt6/releases/latest/download/x86_64-qt6-iconv.tar.xz
@@ -25,28 +32,34 @@ tar -xf x86_64-qt6-iconv.tar.xz --strip-components=1 -C /usr/local
 ldconfig
 ```
 
-This method will work inside a docker container (like github workflow `container:`) where you have not or cannot install qemu on the host.
+**Note:** This method works inside Docker containers (like GitHub workflow `container:`) where QEMU cannot be installed on the host.
 
-notes:
+## Why This Project Exists
 
-This problem is the reason I avoid `container:` and use docker commands directly on the Github hosted runner.
+### The Problem
 
-The issue with the second option is that even though it's the way qt6 docs say you must cross compile it's not the easiest way. Without a doubt option 1 is the easiest and fastest way to do this. Temporary emulation during the build process solve the entire problem.
+Cross-compiling Qt6 presents several challenges:
 
-An example problem is that if you install qt6 you are going to get a version linked totally differently to how we want qt6 to be linked. And it cannot seem to help itself to link to things and default to settings based on this, whether you want to or not. It has so many auto toggles for features it's a minefield to configure. This is why i've never bothered with it. A needlessly difficult way to do a thing that should be simple.
+1. **QEMU Requirement**: Qt6 cross-compilation typically requires QEMU emulation to be available during the build process.
 
-Another example problem is that whe you use `container:` in a Github workflow you cannot modify the host runner. So there is no qemu emulation available and it forces you to build qt6 twice. I don't want to build to twice during the build process, it's one of the largest dependencies.
+2. **GitHub Actions Limitations**: When using `container:` in GitHub workflows, you cannot modify the host runner, so QEMU emulation is unavailable.
 
-So we don't want to install a system version or build it twice.
+3. **Qt6 Configuration Complexity**: Installing system Qt6 often results in linking configurations that differ from desired static builds. Qt6 has numerous auto-toggles and features that make configuration difficult.
 
-That is why i made this. It's just to finally solve that issue properly. A fallback method to be able to build.
+4. **Build Time**: Without proper setup, you're forced to build Qt6 twice during the build process, significantly increasing build time.
 
-It packages a partial build from the normal script but just for these dependencies to provide the exact host build of qt6 static we need to cross compile.
+### The Solution
 
-- `zlib` 
-- `iconv` 
-- `icu` 
-- `openssl` 
-- `double_conversion` 
-- `qtbase` 
-- `qttools`
+This project provides a fallback method that solves these issues:
+
+- **Option 1** (Recommended): Use QEMU emulation for temporary emulation during the build process
+- **Option 2** (Fallback): Use prebuilt static Qt6 libraries when QEMU is not available
+
+### Why Not System Qt6?
+
+- System Qt6 installations are often linked differently than required for static builds
+- Qt6's auto-configuration can override desired settings
+- Dependency management becomes unnecessarily complex
+- Build reproducibility is compromised
+
+That's why this project exists - to provide a proper solution for cross-compiling Qt6 without the usual complications.
