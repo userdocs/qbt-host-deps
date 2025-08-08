@@ -71,7 +71,7 @@ jobs:
 
     steps:
       - name: Checkout ${{ inputs.distinct_id }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           persist-credentials: false
 
@@ -192,12 +192,12 @@ jobs:
         run: cd "${qbt_build_dir}" && tar cJf "${name}.tar.xz" "host_deps"
 
       - name: Generate artifact attestation  ${{ inputs.distinct_id }}
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
         with:
           subject-path: "${{ env.qbt_build_dir }}/${{ env.name }}.tar.xz"
 
       - name: Host - Upload ${{ env.name }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: "${{ env.name }}"
           path: "${{ env.qbt_build_dir }}/${{ env.name }}.tar.xz"
