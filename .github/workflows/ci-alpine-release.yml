@@ -3,10 +3,6 @@ name: ci - alpine-release
 on:
   workflow_call:
     inputs:
-      distinct_id:
-        description: "Distinct ID for the artifacts"
-        required: true
-        type: string
       release_tag:
         type: string
         required: true
@@ -21,7 +17,7 @@ jobs:
       qbt_build_dir: "qbt-build"
 
     steps:
-      - name: Checkout ${{ inputs.distinct_id }}
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
@@ -33,11 +29,21 @@ jobs:
           merge-multiple: true
 
       - name: Host- Create release - tag - assets
-        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
-        with:
-          artifacts: "release/*.tar.xz"
-          replacesArtifacts: true
-          tag: "${{ inputs.release_tag }}"
-          name: "${{ inputs.release_tag }}"
-          allowUpdates: true
-          token: "${{ github.token }}"
+        env:
+          GH_TOKEN: "${{ github.TOKEN }}"
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${{ inputs.release_tag }}" >/dev/null 2>&1; then
+            gh release edit "${{ inputs.release_tag }}" \
+              --title "${{ inputs.release_tag }}" \
+              --notes-file release.md \
+              --latest
+            gh release upload "${{ inputs.release_tag }}" \
+              --clobber \
+              "release/*.tar.xz"
+          else
+            gh release create "${{ inputs.release_tag }}" \
+              --title "${{ inputs.release_tag }}" \
+              --notes-file release.md \
+              --latest \
+              "release/*.tar.xz"
+          fi
