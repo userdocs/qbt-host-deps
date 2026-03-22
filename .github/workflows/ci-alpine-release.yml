@@ -35,7 +35,6 @@ jobs:
           if git ls-remote --exit-code --tags origin "refs/tags/${{ inputs.release_tag }}" >/dev/null 2>&1; then
             gh release edit "${{ inputs.release_tag }}" \
               --title "${{ inputs.release_tag }}" \
-              --notes-file release.md \
               --latest
             gh release upload "${{ inputs.release_tag }}" \
               --clobber \
@@ -43,7 +42,6 @@ jobs:
           else
             gh release create "${{ inputs.release_tag }}" \
               --title "${{ inputs.release_tag }}" \
-              --notes-file release.md \
               --latest \
               "release/*.tar.xz"
           fi
