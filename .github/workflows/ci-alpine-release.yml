@@ -31,17 +31,18 @@ jobs:
       - name: Host- Create release - tag - assets
         env:
           GH_TOKEN: "${{ github.TOKEN }}"
+          release_tag: "${{ inputs.release_tag }}"
         run: |
-          if git ls-remote --exit-code --tags origin "refs/tags/${{ inputs.release_tag }}" >/dev/null 2>&1; then
-            gh release edit "${{ inputs.release_tag }}" \
-              --title "${{ inputs.release_tag }}" \
+          if git ls-remote --exit-code --tags origin "refs/tags/${release_tag}" >/dev/null 2>&1; then
+            gh release edit "${release_tag}" \
+              --title "${release_tag}" \
               --latest
-            gh release upload "${{ inputs.release_tag }}" \
+            gh release upload "${release_tag}" \
               --clobber \
               "release/*.tar.xz"
           else
-            gh release create "${{ inputs.release_tag }}" \
-              --title "${{ inputs.release_tag }}" \
+            gh release create "${release_tag}" \
+              --title "${release_tag}" \
               --latest \
               "release/*.tar.xz"
           fi
